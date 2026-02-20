@@ -56,6 +56,20 @@ impl AppIndex {
             .map(|(_, v)| v)
     }
 
+    /// Search for elements whose name_lc is a proper prefix of the query
+    /// (i.e. query starts with name_lc followed by a space), for matching shell
+    /// commands that are invoked with arguments (e.g. "qn w" matches alias "qn").
+    fn search_prefix_of_query<'a>(&'a self, query: &'a str) -> impl Iterator<Item = &'a App> + 'a {
+        self.by_name
+            .iter()
+            .filter(move |(k, _)| {
+                !k.is_empty()
+                    && query.starts_with(k.as_str())
+                    && query.as_bytes().get(k.len()) == Some(&b' ')
+            })
+            .map(|(_, v)| v)
+    }
+
     /// Factory function for creating
     pub fn from_apps(options: Vec<App>) -> Self {
         let mut bmap = BTreeMap::new();
@@ -214,10 +228,17 @@ impl Tile {
         } else {
             &AppIndex::from_apps(vec![])
         };
-        let results: Vec<App> = options
+        let mut results: Vec<App> = options
             .search_prefix(&query)
             .map(|x| x.to_owned())
             .collect();
+
+        if results.is_empty() {
+            results = options
+                .search_prefix_of_query(&query)
+                .map(|x| x.to_owned())
+                .collect();
+        }
 
         self.results = results;
     }
