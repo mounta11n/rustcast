@@ -429,7 +429,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     name: "Open Website: ".to_string() + &tile.query,
                     name_lc: "".to_string(),
                 });
-            } else if tile.query_lc.split(' ').count() > 1 {
+            } else if tile.results.is_empty() && tile.query_lc.split(' ').count() > 1 {
                 tile.results.push(App {
                     open_command: AppCommand::Function(Function::GoogleSearch(tile.query.clone())),
                     icons: None,
